@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seminar Redirect</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      background: #f4f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      max-width: 480px;
+      padding: 2.5rem 2rem;
+      border-radius: 16px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .icon { font-size: 3rem; margin-bottom: 1rem; }
+    h2 { margin: 0 0 0.75rem; font-weight: 600; color: #1e293b; }
+    p { color: #475569; line-height: 1.6; margin: 0.5rem 0; }
+    .time { font-weight: 600; color: #0f172a; }
+  </style>
+</head>
+<body>
+  <div class="card" id="message-card">
+    <div class="icon" id="icon"></div>
+    <h2 id="title"></h2>
+    <p id="description"></p>
+    <p id="extra-info"></p>
+  </div>
+
+  <script>
+    // ============================================================
+    //  ★ 修改会议信息（请根据最终日程调整） ★
+    //  时区已固定为香港时间 (UTC+8)
+    // ============================================================
+    const meetings = [
+      {
+        name: 'Day 1 Morning',
+        zoomLink: 'https://hkmu.zoom.us/j/3311074379?omn=97625273782',
+        startTime: '2026-07-10T08:20:00+08:00',
+        endTime:   '2026-07-10T12:20:00+08:00'
+      },
+      {
+        name: 'Day 1 Afternoon',
+        zoomLink: 'https://hkmu.zoom.us/j/3311074379?omn=99166710979',
+        startTime: '2026-07-10T13:50:00+08:00',
+        endTime:   '2026-07-10T18:00:00+08:00'
+      },
+      {
+        name: 'Day 2 Morning',
+        zoomLink: 'https://hkmu.zoom.us/j/3311074379?omn=98152005708',
+        startTime: '2026-07-11T08:20:00+08:00',
+        endTime:   '2026-07-11T12:20:00+08:00'
+      },
+      {
+        name: 'Day 2 Afternoon',
+        zoomLink: 'https://hkmu.zoom.us/j/3311074379?omn=91024449365',
+        startTime: '2026-07-11T13:50:00+08:00',
+        endTime:   '2026-07-11T17:10:00+08:00'
+      }
+    ];
+
+    // 格式化时间（HKT）
+    function formatTimeHKT(isoString) {
+      const date = new Date(isoString);
+      return date.toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Hong_Kong',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+
+    // 当前 UTC 时间戳
+    const now = Date.now();
+
+    // 查找当前是否处于某个会议期间
+    const currentMeeting = meetings.find(m => {
+      const start = new Date(m.startTime).getTime();
+      const end = new Date(m.endTime).getTime();
+      return now >= start && now < end;
+    });
+
+    if (currentMeeting) {
+      // 会议进行中 → 直接跳转 Zoom
+      window.location.replace(currentMeeting.zoomLink);
+    } else {
+      // 不在任何会议中 → 准备提示信息
+      const firstStart = new Date(meetings[0].startTime).getTime();
+      const lastEnd = new Date(meetings[meetings.length - 1].endTime).getTime();
+
+      const iconEl = document.getElementById('icon');
+      const titleEl = document.getElementById('title');
+      const descEl = document.getElementById('description');
+      const extraEl = document.getElementById('extra-info');
+
+      if (now < firstStart) {
+        // 研讨会尚未开始
+        iconEl.textContent = '⏳';
+        titleEl.textContent = 'The seminar has not yet commenced.';
+        descEl.textContent = 'Please wait until the scheduled start time.';
+        extraEl.innerHTML = `First session begins at <span class="time">${formatTimeHKT(meetings[0].startTime)}</span> (HKT).`;
+      } else if (now >= lastEnd) {
+        // 研讨会已全部结束
+        iconEl.textContent = '🏁';
+        titleEl.textContent = 'The seminar has officially concluded.';
+        descEl.textContent = 'Thank you for your participation. We look forward to welcoming you at future events.';
+        extraEl.textContent = '';
+      } else {
+        // 在会议间隙 → 找出下一场
+        const nextMeeting = meetings.find(m => new Date(m.startTime).getTime() > now);
+        if (nextMeeting) {
+          iconEl.textContent = '⏸️';
+          titleEl.textContent = 'The previous session has ended.';
+          descEl.textContent = 'Please wait for the next session to begin.';
+          extraEl.innerHTML = `Next session: <strong>${nextMeeting.name}</strong> will start at <span class="time">${formatTimeHKT(nextMeeting.startTime)}</span> (HKT).<br>Please scan the QR code again at that time.`;
+        } else {
+          // 理论上不会走到这里，但作为兜底
+          titleEl.textContent = 'No session is currently in progress.';
+          descEl.textContent = 'Please refer to the seminar programme for details.';
+        }
+      }
+    }
+  </script>
+</body>
+</html>
