@@ -61,6 +61,7 @@
     </div>
 
     <script>
+        const DISPLAY_OFFSET_MS = 10 * 60 * 1000;   // 展示时间偏移 +10 分钟
         // ============================================================
         //  ★ 修改会议信息（请根据最终日程调整） ★
         //  时区已固定为香港时间 (UTC+8)
@@ -142,8 +143,9 @@
                 iconEl.textContent = '⏳';
                 titleEl.textContent = 'The seminar has not yet commenced.';
                 descEl.textContent = 'Please wait until the scheduled start time.';
+                const firstDisplayTime = new Date(new Date(meetings[0].startTime).getTime() + DISPLAY_OFFSET_MS);
                 extraEl.innerHTML =
-                    `First session begins at <span class="date-time">${formatDateTimeHKT(meetings[0].startTime)}</span>.`;
+                    `First session begins at <span class="date-time">${formatDateTimeHKT(firstDisplayTime.toISOString())}</span>.`;
             } else if (now >= lastEnd) {
                 // 研讨会已全部结束
                 iconEl.textContent = '🏁';
@@ -158,8 +160,9 @@
                     iconEl.textContent = '⏸️';
                     titleEl.textContent = 'The previous session has ended.';
                     descEl.textContent = 'Please wait for the next session to begin.';
+                    const nextDisplayTime = new Date(new Date(nextMeeting.startTime).getTime() + DISPLAY_OFFSET_MS);
                     extraEl.innerHTML =
-                        `Next session: <strong>${nextMeeting.name}</strong> will start at <span class="date-time">${formatDateTimeHKT(nextMeeting.startTime)}</span>.<br>Please scan the QR code again at that time.`;
+                    `Next session: <strong>${nextMeeting.name}</strong> will start at <span class="date-time">${formatDateTimeHKT(nextDisplayTime.toISOString())}</span>.<br>Please scan the QR code again at that time.`;
                 } else {
                     // 理论上不会走到这里，但作为兜底
                     titleEl.textContent = 'No session is currently in progress.';
